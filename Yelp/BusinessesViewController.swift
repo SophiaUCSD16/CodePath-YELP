@@ -11,18 +11,41 @@ import UIKit
 class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     var businesses: [Business]!
+    var searchBar: UISearchBar!
+    var searchSettings = YelpRepoSearchSettings()
     
     @IBOutlet weak var tableView: UITableView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Initialize the UISearchBar
+        // create the search bar programatically since you won't be
+        // able to drag one onto the navigation bar
+        searchBar = UISearchBar()
+        searchBar.delegate = self
+        
+        // Add SearchBar to the NavigationBar
+        // the UIViewController comes with a navigationItem property
+        // this will automatically be initialized for you if when the
+        // view controller is added to a navigation controller's stack
+        // you just need to set the titleView to be the search bar
+        searchBar.sizeToFit()
+        navigationItem.titleView = searchBar
+        doSearch()
+        
         tableView.delegate = self
         tableView.dataSource = self
+        // Use autolayout constraints
         tableView.rowHeight = UITableViewAutomaticDimension
+        // Use for the scroll height demension
         tableView.estimatedRowHeight = 120
-        
-        Business.searchWithTerm(term: "Thai", completion: { (businesses: [Business]?, error: Error?) -> Void in
+    }
+    
+        // perform yje search
+        fileprivate func doSearch(){
+            
+            Business.searchWithTerm(term: "Thai", completion: { (businesses: [Business]?, error: Error?) -> Void in
             
             self.businesses = businesses
             self.tableView.reloadData()
@@ -33,9 +56,11 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
                     print(business.address!)
                 }
             }
-            
+        
             }
+            
         )
+        }
         
         /* Example of Yelp search with more search options specified
          Business.searchWithTerm("Restaurants", sort: .Distance, categories: ["asianfusion", "burgers"], deals: true) { (businesses: [Business]!, error: NSError!) -> Void in
@@ -47,9 +72,7 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
          }
          }
          */
-        
-    }
-    
+
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -68,9 +91,7 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
         cell.business = businesses[indexPath.row]
         return cell
     }
-    
-    
-    
+
     /*
      // MARK: - Navigation
      
@@ -80,5 +101,30 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
      // Pass the selected object to the new view controller.
      }
      */
+
+}
+
+// SearchBar methods
+extension BusinessesViewController: UISearchBarDelegate {
     
+    func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
+        searchBar.setShowsCancelButton(true, animated: true)
+        return true
+    }
+    
+    func searchBarShouldEndEditing(_ searchBar: UISearchBar) -> Bool {
+        searchBar.setShowsCancelButton(false, animated: true)
+        return true
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.text = ""
+        searchBar.resignFirstResponder()
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchSettings.searchString = searchBar.text
+        searchBar.resignFirstResponder()
+        doSearch()
+    }
 }
